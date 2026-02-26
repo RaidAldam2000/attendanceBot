@@ -82,6 +82,5 @@ client.on("messageCreate", message => {
 });
 
 // تسجيل الدخول باستخدام ENV
-client.login(process.env.DISCORD_TOKEN).catch(err => {
-  console.error("Failed to login:", err);
-});
+client.login(process.env.DISCORD_TOKEN);
+
