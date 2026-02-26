@@ -14,12 +14,13 @@ const client = new Client({
 // مسار ملف الحضور
 const dataFile = path.join(__dirname, "attendance.json");
 
-// تحميل بيانات سابقة إذا موجودة
-let attendance = {};
-if (fs.existsSync(dataFile)) {
-  const rawData = fs.readFileSync(dataFile);
-  attendance = JSON.parse(rawData);
+// تأكد أن الملف موجود
+if (!fs.existsSync(dataFile)) {
+  fs.writeFileSync(dataFile, "{}");
 }
+
+// تحميل بيانات سابقة إذا موجودة
+let attendance = JSON.parse(fs.readFileSync(dataFile));
 
 // حفظ البيانات في الملف
 function saveAttendance() {
@@ -27,7 +28,7 @@ function saveAttendance() {
 }
 
 // عند تشغيل البوت
-client.once("clientReady", () => {
+client.once("ready", () => {
   console.log("Bot is running");
 });
 
@@ -35,10 +36,8 @@ client.once("clientReady", () => {
 client.on("messageCreate", message => {
   if (message.author.bot) return;
 
-  // لوج لتأكيد القراءة
   console.log(`Message received in channel: "${message.channel.name}" from "${message.author.username}"`);
 
-  // روم الحضور فقط
   if (!message.channel.name.includes("الحضور")) return;
 
   const userId = message.author.id;
@@ -58,9 +57,7 @@ client.on("messageCreate", message => {
     saveAttendance();
 
     message.reply(
-      `✅ تم تسجيل الدخول
-👤 الاسم: ${message.author.username}
-🕒 الوقت: ${now.toLocaleTimeString()}`
+      `✅ تم تسجيل الدخول\n👤 الاسم: ${message.author.username}\n🕒 الوقت: ${now.toLocaleTimeString()}`
     );
   }
 
@@ -75,17 +72,16 @@ client.on("messageCreate", message => {
     const minutes = Math.floor(diff / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
 
-    delete attendance[userId].inTime; // إزالة وقت الدخول بعد الخروج
+    delete attendance[userId].inTime;
     saveAttendance();
 
     message.reply(
-      `🟥 تم تسجيل الخروج
-👤 الاسم: ${message.author.username}
-⏱ المدة: ${minutes} دقيقة و ${seconds} ثانية`
+      `🟥 تم تسجيل الخروج\n👤 الاسم: ${message.author.username}\n⏱ المدة: ${minutes} دقيقة و ${seconds} ثانية`
     );
   }
 });
 
-// ضع توكن البوت هنا
-client.login(process.env.DISCORD_TOKEN);
-//client.login("MTQ3NjQzNjU3NTEwODg2MjExNQ.GAi7IG.X-JFIxZA7BwaaWWkfpMmKZXyxf3hpdmDIGSIyU");
+// تسجيل الدخول باستخدام ENV
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+  console.error("Failed to login:", err);
+});
